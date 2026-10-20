@@ -247,6 +247,10 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
  .canvas-focus.arranging .arrangement-notice button{flex:1;min-width:44px;padding:5px 2px;font-size:10px;white-space:normal}
 }
 .canvas-focus.arranging .arrangement-notice{z-index:9}
+/* Goal completion keeps a persistent restart action beside the transient flash. */
+.goal-actions{position:absolute;z-index:10;top:56%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:calc(100% - 24px);padding:12px;border:1px solid #5a90ab;border-radius:14px;background:#10283ef2;box-shadow:0 6px 28px #09233840;text-align:center}
+.goal-actions button{min-height:48px;min-width:200px;padding:10px 16px;font-size:15px;white-space:normal}
+.goal-actions small{color:#c4dfed;font-size:11px}
 
 </style>
 </head>
@@ -276,7 +280,7 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
 </div>
 <div id="arrangementNotice" class="arrangement-notice" hidden><span>Startaufstellung einrichten · Automatiken pausiert</span><button id="saveArrangement" class="secondary">Speichern …</button><button id="finishArrangement" class="secondary">Fertig</button></div>
 <div class="tempo-control"><label for="speed">Tempo<small>Puck &amp; Spieler</small></label><input id="speed" type="range" min="0.25" max="2" step="0.05" value="0.5" aria-describedby="speedHelp"><output id="speedValue" for="speed">0,5×</output><span id="speedHelp" class="sr-only">Geschwindigkeit von 0,25-fach bis 2-fach. Gilt für Puck, automatische Spielerbewegungen und Filmwiedergabe.</span></div>
-<div class="rink-wrap"><div id="shotFeedback" class="shot-feedback" role="status" hidden></div><svg id="rink" viewBox="0 0 960 600" role="group" aria-label="Drei Viertel einer Eishockeyfläche: Teil des eigenen Drittels, neutrale Zone und Angriffsdrittel. Spieler ziehen oder mit Pfeiltasten verschieben.">
+<div class="rink-wrap"><div id="shotFeedback" class="shot-feedback" role="status" hidden></div><div id="goalActions" class="goal-actions" hidden><button id="rewindPlay" type="button" class="primary">↺ Zurück zum Anfang</button><small>Alle Phasen bleiben erhalten.</small></div><svg id="rink" viewBox="0 0 960 600" role="group" aria-label="Drei Viertel einer Eishockeyfläche: Teil des eigenen Drittels, neutrale Zone und Angriffsdrittel. Spieler ziehen oder mit Pfeiltasten verschieben.">
 <defs><pattern id="iceTexture" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 12L12 0" stroke="#b5d5de" stroke-width=".4" opacity=".18"/></pattern><clipPath id="iceClip"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928Z"/></clipPath><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#1882a0"/></marker></defs>
 <g id="rinkScene" transform="translate(0 600) rotate(-90)"><g id="ice" aria-hidden="true"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928" fill="#f1f8fa" stroke="#b5cdd4" stroke-width="6"/>
 <g clip-path="url(#iceClip)"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928Z" fill="url(#iceTexture)"/><rect x="28" y="784" width="544" height="144" fill="#dceee7" opacity=".45"/>
@@ -1322,6 +1326,19 @@ function updateTransport(){
 function selectFrame(i){
  commit();stopBookSupport();liveDefenseReaction=null;playing=false;frameIndex=Math.max(0,Math.min(play.frames.length-1,i));state=copy(play.frames[frameIndex].state);delete state.passTrace;time=frameTime(play.frames,frameIndex);editing=true;dirty=false;history=[];liveTime=0;updateFrameUI();render();resetLiveDefense();
 }
+function rewindToStart(){
+ if(!state.completed)return;
+ cancelAutoPhase();stopBookSupport();playing=false;drag=null;puckTransfer=null;lastPuckTap=null;lastTransfer={id:null,at:0};
+ if(mode==='free'){
+  state=copy((freeFrames[0]||play.frames[0]).state);delete state.passTrace;state.completed=false;
+  frameIndex=0;time=0;editing=true;dirty=false;history=[];liveTime=0;supportClock=0;supportInfo=null;supportTargets={};freePaused=false;
+ }else selectFrame(0);
+ selected=state.puck.owner||'a0';if(selected.startsWith('a'))freeLeader=selected;
+ clearTimeout(shotTimer);lastShotEvent=null;$('#shotFeedback').hidden=true;$('#shotFeedback').classList.remove('flash');
+ resetLiveDefense();updateSupportUI();updateEditor();render();requestAnimationFrame(fitTouchRink);
+ toast('Zurück zur Startaufstellung. Alle aufgenommenen Phasen bleiben erhalten.');
+}
+$('#rewindPlay').onclick=rewindToStart;
 function enterEdit(){
  if(!editing){playing=false;editing=true;frameIndex=sampleActors(play.frames,time,roster).index;state=copy(state);markDirty();updateFrameUI();}
 }
@@ -1674,6 +1691,7 @@ function setPassControls(settings){
 }
 function boardName(board){return {left:orientation==='landscape'?'untere seitliche Bande':'linke seitliche Bande',right:orientation==='landscape'?'obere seitliche Bande':'rechte seitliche Bande',end:'Hintertorbande','corner-left':orientation==='landscape'?'untere Rundung':'linke Rundung','corner-right':orientation==='landscape'?'obere Rundung':'rechte Rundung',behind:'Bande hinter dem Tor · inklusive Rundungen'}[board]||'direkt';}
 function updateShotFeedback(){
+ $('#goalActions').hidden=!state.completed;
  const trace=puckTransfer?{...puckTransfer.flight,goalShot:!!puckTransfer.flight.route.goalShot}:state.passTrace;
  if(!(trace?.goalShot||trace?.shot)||trace.status==='flying'){if(lastShotEvent!==null){clearTimeout(shotTimer);$('#shotFeedback').hidden=true;}lastShotEvent=null;return;}
  const key=frameIndex+':'+trace.status;if(lastShotEvent===key)return;lastShotEvent=key;
