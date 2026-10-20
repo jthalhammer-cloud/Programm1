@@ -268,6 +268,21 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
  .canvas-focus #focusBoard,.canvas-focus #openSavedPlays{pointer-events:auto}
 }
 #saveGoalForm{display:grid;gap:10px}#saveGoalForm input{font-size:16px;min-height:48px}#saveGoalForm button{min-height:48px}#saveGoalDialog>p{color:#c4dfed;font-size:13px}#goalSaveStatus{color:#ffd0b3;overflow-wrap:anywhere}
+/* Keep the original opponent checkbox directly reachable on the large ice. */
+.canvas-focus .focus-defense{position:absolute;z-index:9;top:calc(58px + env(safe-area-inset-top));left:calc(7px + env(safe-area-inset-left));width:150px;border:1px solid #375570;border-radius:12px;background:#10283eef;box-shadow:0 3px 14px #10203330}
+.canvas-focus .focus-defense .auto-opponents{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px!important;margin:0;padding:6px 8px!important;font-size:11px!important;line-height:1.3;color:#e8f7ff;cursor:pointer;touch-action:manipulation}
+.canvas-focus .focus-defense input{width:22px;height:22px;flex-shrink:0;margin:0;accent-color:#68d1ff}
+@media(orientation:landscape){
+ .canvas-focus .focus-defense{top:calc(109px + env(safe-area-inset-top));left:auto;right:calc(8px + env(safe-area-inset-right));width:128px}
+ .canvas-focus.arranging .arrangement-notice{top:calc(160px + env(safe-area-inset-top))}
+}
+@media(orientation:landscape) and (max-height:360px){
+ .canvas-focus .quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:44px;align-content:end;gap:4px;padding:164px 8px 8px}
+ .canvas-focus .quick-actions>button{min-height:44px;max-height:44px}
+ .canvas-focus .quick-actions .selected-player,.canvas-focus .quick-actions .play-button{grid-column:1/-1}
+ .canvas-focus #quickPass,.canvas-focus #quickShoot{white-space:normal;font-size:10px;padding:3px;line-height:1.2}
+ .canvas-focus.arranging #quickPass{grid-column:1/-1}
+}
 
 </style>
 </head>
@@ -288,6 +303,7 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
 </aside>
 <aside class="panel free-panel" hidden><div class="panel-heading"><h2>Freies Zusammenspiel</h2><span class="badge">LIVE</span></div><p class="muted">Verschiebe einen blauen Spieler. Die anderen bieten sich an und sichern ab; Orange passt die Deckung an.</p><label for="freeLeader">Von dir geführter Spieler</label><select id="freeLeader"></select><label class="toggle-line"><input id="followPuck" type="checkbox" checked> Puck folgt dem geführten Spieler</label><p class="muted">Ohne Haken bewegst du einen Spieler ohne Puck. Der bisherige Puckführer bleibt stehen.</p><button id="freePause" class="secondary full" aria-pressed="false">Anpassung pausieren</button><button id="freeReset" class="text-button full">Startaufstellung wiederherstellen</button><h3>Aufgaben deiner Linie</h3><div id="supportRoles" class="support-roles"></div><p id="supportNotes" class="muted"></p><hr><button id="freeCapture" class="secondary full">＋ Aufstellung aufnehmen</button><p class="muted" id="freeFrameCount">1 Aufstellung aufgenommen</p><button id="freeToPlaybook" class="primary full">Als Spielzug bearbeiten</button><p class="model-note">Situative Lernregeln für Passwinkel, Breite, Slot und Absicherung. Keine Vorhersage einer echten Mannschaft.</p></aside>
 <section class="board-panel">
+<div id="focusDefenseSlot" class="focus-defense" hidden></div>
 <div id="focusMenuBar" hidden><button id="openFocusMenu" class="secondary" type="button" aria-haspopup="dialog" aria-controls="focusMenu">☰ Menü</button><span id="focusContext" role="status">Spieler ziehen · antippen & passen</span></div>
 <div class="board-header"><div><span class="eyebrow" id="playCategory">ANGRIFF · 5 GEGEN 5</span><h2 id="playTitle">Spielzug</h2></div><div class="board-heading-actions"><span class="live-tag"><i></i><span id="boardMode">Taktiktafel</span></span><button id="openSavedPlays" class="secondary" type="button" aria-haspopup="dialog" aria-label="Gespeicherte Spielzüge öffnen">Spielzüge</button><button id="focusBoard" class="secondary" aria-pressed="false">Vollbild</button></div></div>
 <div class="workspace-tools"><button id="quickStart" class="secondary" type="button">Start wählen</button><div class="faceoff-controls"><label for="faceoffSpot">Start<select id="faceoffSpot"><option value="left">Bully Links</option><option value="right">Bully Rechts</option><option value="center">Bully Mittelkreis</option></select></label><button id="startFaceoff" class="secondary">Bully starten</button></div><label class="auto-opponents"><input type="checkbox" id="autoDefense" title="Reagiert mit 0,3 Sekunden Verzögerung auf tatsächliche Bewegungen von Blau oder dem Puck."> Gegner bewegen</label><details id="boardTools" class="board-tools"><summary>Optionen <span aria-hidden="true">⌄</span></summary><div class="board-options"><div class="options-heading"><strong>Ansicht & Passoptionen</strong><button id="closeBoardTools" class="icon-button" aria-label="Optionen schließen">×</button></div><div class="quick-play"><label for="quickPlay">Eigene Spielzüge</label><select id="quickPlay"></select></div>
@@ -1678,12 +1694,12 @@ function setBoardFocus(on,remember=true){
  for(const item of focusItems)if(item.marker.parentNode)item.marker.replaceWith(item.node);focusItems=[];
  if(focusPlayHome?.parentNode)focusPlayHome.replaceWith($('#playButton'));focusPlayHome=null;
  const compact=compactViewport(),canvas=on&&compact;
- focusBoard=on;document.body.classList.toggle('ice-focus',on);document.body.classList.toggle('canvas-focus',canvas);$('#focusMenuBar').hidden=!canvas;
+ focusBoard=on;document.body.classList.toggle('ice-focus',on);document.body.classList.toggle('canvas-focus',canvas);$('#focusMenuBar').hidden=!canvas;$('#focusDefenseSlot').hidden=!canvas;
  $('#focusBoard').textContent=canvas?'Übersicht':on?'Vollbild schließen':'Vollbild';$('#focusBoard').setAttribute('aria-pressed',String(on));
  $('#focusBoard').setAttribute('aria-label',canvas?'Übersicht anzeigen':on?'Vollbild schließen':'Großes Spielfeld öffnen');
  if(!on&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
  if(canvas){
-  for(const [selector,destination]of [['.mode-menu','#focusModes'],['.workspace-tools','#focusSettings'],['.tempo-control','#focusTempo'],['.transport','#focusFilm'],['.free-board-controls','#focusFilm'],['#phaseStrip','#focusFilm'],['#recordingStatus','#focusFilm'],['.phase-details','#focusFilm']]){
+  for(const [selector,destination]of [['.mode-menu','#focusModes'],['.workspace-tools','#focusSettings'],['.tempo-control','#focusTempo'],['.transport','#focusFilm'],['.free-board-controls','#focusFilm'],['#phaseStrip','#focusFilm'],['#recordingStatus','#focusFilm'],['.phase-details','#focusFilm'],['.auto-opponents','#focusDefenseSlot']]){
    const node=$(selector),marker=document.createComment('focus-home');node.before(marker);focusItems.push({node,marker});$(destination).append(node);
   }
   focusPlayHome=document.createComment('play-button-home');$('#playButton').before(focusPlayHome);$('.quick-actions').append($('#playButton'));
