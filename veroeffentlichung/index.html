@@ -267,6 +267,7 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
  .canvas-focus .board-panel>.board-header{pointer-events:none}
  .canvas-focus #focusBoard,.canvas-focus #openSavedPlays{pointer-events:auto}
 }
+#saveGoalForm{display:grid;gap:10px}#saveGoalForm input{font-size:16px;min-height:48px}#saveGoalForm button{min-height:48px}#saveGoalDialog>p{color:#c4dfed;font-size:13px}#goalSaveStatus{color:#ffd0b3;overflow-wrap:anywhere}
 
 </style>
 </head>
@@ -296,7 +297,7 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
 </div>
 <div id="arrangementNotice" class="arrangement-notice" hidden><span>Startaufstellung einrichten · Automatiken pausiert</span><button id="saveArrangement" class="secondary">Speichern …</button><button id="finishArrangement" class="secondary">Fertig</button></div>
 <div class="tempo-control"><label for="speed">Tempo<small>Puck &amp; Spieler</small></label><input id="speed" type="range" min="0.25" max="2" step="0.05" value="0.5" aria-describedby="speedHelp"><output id="speedValue" for="speed">0,5×</output><span id="speedHelp" class="sr-only">Geschwindigkeit von 0,25-fach bis 2-fach. Gilt für Puck, automatische Spielerbewegungen und Filmwiedergabe.</span></div>
-<div class="rink-wrap"><div id="shotFeedback" class="shot-feedback" role="status" hidden></div><div id="goalActions" class="goal-actions" hidden><button id="rewindPlay" type="button" class="primary">↺ Zurück zum Anfang</button><small>Alle Phasen bleiben erhalten.</small></div><svg id="rink" viewBox="0 0 960 600" role="group" aria-label="Drei Viertel einer Eishockeyfläche: Teil des eigenen Drittels, neutrale Zone und Angriffsdrittel. Spieler ziehen oder mit Pfeiltasten verschieben.">
+<div class="rink-wrap"><div id="shotFeedback" class="shot-feedback" role="status" hidden></div><div id="goalActions" class="goal-actions" hidden><button id="rewindPlay" type="button" class="primary">↺ Zurück zum Anfang</button><button id="saveGoalPlay" type="button" class="secondary" aria-haspopup="dialog" aria-controls="saveGoalDialog">Spielzug speichern</button><small>Alle Phasen bleiben erhalten.</small></div><svg id="rink" viewBox="0 0 960 600" role="group" aria-label="Drei Viertel einer Eishockeyfläche: Teil des eigenen Drittels, neutrale Zone und Angriffsdrittel. Spieler ziehen oder mit Pfeiltasten verschieben.">
 <defs><pattern id="iceTexture" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 12L12 0" stroke="#b5d5de" stroke-width=".4" opacity=".18"/></pattern><clipPath id="iceClip"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928Z"/></clipPath><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#1882a0"/></marker></defs>
 <g id="rinkScene" transform="translate(0 600) rotate(-90)"><g id="ice" aria-hidden="true"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928" fill="#f1f8fa" stroke="#b5cdd4" stroke-width="6"/>
 <g clip-path="url(#iceClip)"><path d="M26 928V165A137 137 0 0 1 163 28H437A137 137 0 0 1 574 165V928Z" fill="url(#iceTexture)"/><rect x="28" y="784" width="544" height="144" fill="#dceee7" opacity=".45"/>
@@ -334,6 +335,7 @@ body.canvas-focus[data-orientation] #rink,body.canvas-focus[data-mode=free][data
 </main>
 <dialog id="touchPanel" class="touch-sheet" aria-labelledby="touchPanelTitle"><div class="sheet-handle" aria-hidden="true"></div><div class="dialog-heading"><h2 id="touchPanelTitle">Spieler bearbeiten</h2><button id="closeTouchPanel" type="button" class="icon-button" aria-label="Details schließen">×</button></div><nav class="sheet-tabs" aria-label="Detailansicht"><button type="button" data-sheet-panel="player">Spieler</button><button type="button" data-sheet-panel="library">Spielzüge</button><button type="button" data-sheet-panel="coach">Coaching</button><button type="button" data-sheet-panel="save">Speichern</button></nav><div id="touchPanelContent" class="touch-panel-content"></div><p id="touchPanelMessage" class="sheet-message" role="status"></p><button id="backToRink" type="button" class="secondary full sheet-back">Zurück aufs Eis</button></dialog>
 <dialog id="touchOptions" class="touch-sheet" aria-label="Optionen für deine Taktiktafel"><p id="touchOptionsMessage" class="sheet-message" role="status"></p></dialog>
+<dialog id="saveGoalDialog" class="touch-sheet" aria-labelledby="saveGoalTitle"><div class="dialog-heading"><h2 id="saveGoalTitle">Spielzug speichern</h2><button type="button" class="icon-button close-dialog" aria-label="Speichern schließen">×</button></div><p>Speichere den gesamten Spielzug mit allen Phasen und dem Torabschluss.</p><form id="saveGoalForm"><label for="goalPlayName">Spielzugname</label><input id="goalPlayName" maxlength="70" required autocomplete="off"><p id="goalSaveStatus" role="alert" class="sheet-message"></p><button type="submit" class="primary full">Spielzug speichern</button></form></dialog>
 <dialog id="focusMenu" class="touch-sheet" aria-labelledby="focusMenuTitle"><div class="dialog-heading"><h2 id="focusMenuTitle">Deine Taktiktafel</h2><button id="closeFocusMenu" class="icon-button" type="button" aria-label="Menü schließen">×</button></div><p class="focus-help">Spieler ziehen. Mitspieler antippen und „Pass spielen“ wählen. Phasen entstehen automatisch.</p><nav class="focus-shortcuts" aria-label="Spielzug verwalten"><button type="button" class="primary" data-focus-panel="save">Speichern</button><button type="button" class="secondary" data-focus-panel="library">Spielzüge</button><button type="button" class="secondary" data-focus-panel="player">Spieler bearbeiten</button><button type="button" class="secondary" data-focus-panel="coach">Coaching</button></nav><section><h3>Start & Spielmodus</h3><div id="focusModes"></div><div id="focusSettings"></div></section><section><h3>Geschwindigkeit</h3><div id="focusTempo"></div></section><section id="focusFilm"><h3>Film & Phasen</h3></section><div class="focus-view-actions"><button id="deviceFullscreen" type="button" class="secondary">Browser-Vollbild</button><button id="leaveFocus" type="button" class="secondary">Übersicht anzeigen</button><button id="focusHelp" type="button" class="text-button">So geht’s</button></div><button id="backFromFocusMenu" class="primary full sheet-back" type="button">Zurück aufs Eis</button></dialog>
 <dialog id="confirmDialog"><div class="dialog-heading"><h2>Ungespeicherte Änderungen</h2></div><p id="confirmText"></p><div class="confirm-actions"><button id="confirmCancel" class="secondary">Zurück</button><button id="confirmProceed" class="primary">Änderungen verwerfen</button></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1267,6 +1269,7 @@ let toastTimer,renderClock=0,liveTime=0,history=[];
 let puckTransfer=null,lastPuckTap=null,lastTransfer={id:null,at:0};
 let mode='playbook',bookWorkspace=null,freeWorkspace=null,freeLeader='a3',freePaused=false,freeFrames=[],supportClock=0,supportTargets={},supportInfo=null;
 let confirmResolve=null,focusBoard=false,transportPlaying=null,lastShotEvent=null,shotTimer=null;
+let freeSavedPlay={frames:null,id:null};
 let touchItems=[],touchPanelKind=null,touchReady=false,touchOptionsHome=null,faceoffHome=null,feedbackHome=null,touchFitFrame=null;
 let focusItems=[],focusPlayHome=null,compactView='ice';
 try{compactView=localStorage.getItem('eiszeit.view.v1')==='overview'?'overview':'ice';}catch{}
@@ -1632,8 +1635,32 @@ $('#saveStartForm').onsubmit=e=>{
 };
 $('#newPlay').onclick=async()=>{if(!await canReplace())return;load(createPlay(roster,$('#defense').value));showRink();};
 function prepared(){commit();return validatePlay({...play,roster});}
+function persistPlay(input,id){
+ if(!storageOK)throw Error('Vorhandene Browserdaten konnten nicht gelesen werden und werden zum Schutz nicht überschrieben.');
+ const data=validatePlay(input);data.id=id||globalThis.crypto?.randomUUID?.()||'play-'+Date.now();
+ const next=saved.filter(p=>p.id!==data.id);next.push(data);localStorage.setItem(STORE,JSON.stringify(next));localStorage.setItem(ROSTER,JSON.stringify(roster));
+ saved=next;storageOK=true;return data;
+}
 $('#savePlay').onclick=()=>{
- try{if(!storageOK)throw Error('Vorhandene Browserdaten konnten nicht gelesen werden und werden zum Schutz nicht überschrieben.');const data=prepared();data.id=savedId||globalThis.crypto?.randomUUID?.()||'play-'+Date.now();const next=saved.filter(p=>p.id!==data.id);next.push(data);localStorage.setItem(STORE,JSON.stringify(next));localStorage.setItem(ROSTER,JSON.stringify(roster));saved=next;savedId=data.id;play.id=data.id;storageOK=true;documentDirty=false;$('#deleteSaved').hidden=false;drawLibrary();toast('Spielzug auf diesem Gerät gespeichert.');if($('#touchPanel').open){closeTouchPanel();showRink();}}catch(e){toast('Speichern nicht möglich: '+e.message+' Bitte JSON exportieren.');}
+ try{const data=persistPlay(prepared(),savedId);savedId=data.id;play.id=data.id;documentDirty=false;$('#deleteSaved').hidden=false;drawLibrary();toast('Spielzug auf diesem Gerät gespeichert.');if($('#touchPanel').open){closeTouchPanel();showRink();}}catch(e){toast('Speichern nicht möglich: '+e.message+' Bitte JSON exportieren.');}
+};
+$('#saveGoalPlay').onclick=()=>{
+ if(!state.completed)return;
+ const freeName=freeSavedPlay.frames===freeFrames?saved.find(p=>p.id===freeSavedPlay.id)?.name:null;
+ $('#goalPlayName').value=mode==='free'?(freeName||'Unser Zusammenspiel'):$('#nameInput').value.trim()||play.name;
+ $('#goalSaveStatus').textContent='';$('#saveGoalDialog').showModal();$('#goalPlayName').focus();$('#goalPlayName').select();
+};
+$('#saveGoalForm').onsubmit=e=>{
+ e.preventDefault();if(!$('#saveGoalDialog').open)return;
+ const name=$('#goalPlayName').value.trim();if(!name){$('#goalSaveStatus').textContent='Bitte gib dem Spielzug einen Namen.';return;}
+ try{
+  const free=mode==='free';
+  const draft=free?{...copy(play),id:'',name,autoDefense:false,autoSupport:$('#autoSupport').checked,roster:copy(roster),frames:copy(freeFrames)}:{...prepared(),name};
+  const data=persistPlay(draft,free?(freeSavedPlay.frames===freeFrames?freeSavedPlay.id:null):savedId);
+  if(free)freeSavedPlay={frames:freeFrames,id:data.id};
+  else{savedId=data.id;play.id=data.id;play.name=data.name;$('#nameInput').value=data.name;$('#playTitle').textContent=data.name;$('#deleteSaved').hidden=false;}
+  documentDirty=false;drawLibrary();$('#saveGoalDialog').close();toast('Spielzug gespeichert. Unter „Spielzüge“ kannst du ihn wieder öffnen.');
+ }catch(error){$('#goalSaveStatus').textContent='Speichern nicht möglich: '+error.message;}
 };
 $('#exportPlay').onclick=()=>{
  try{const data=prepared(),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(data.name.replace(/[^a-zA-Z0-9äöüÄÖÜß_-]/g,'_')||'Spielzug')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('JSON-Export gestartet. Datei mit deiner Linie teilen.');}catch(e){toast(e.message);}
